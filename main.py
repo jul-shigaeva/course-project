@@ -1,3 +1,5 @@
+from cog_api import get_results()
+
 organisms = []
 for elem in results: 
     print(elem["organism"])

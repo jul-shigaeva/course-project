@@ -1,16 +1,291 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Мой анализатор</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CAT</title>
+
+    <link rel="stylesheet" href="style.css">
 </head>
+
 
 <body>
 
-    <h1>Bioinformatics dashboard</h1>
+<header>
+    <h1>CAT: COG Analysis Tool</h1>
+    <p>Анализ данных из COG Database NCBI</link></p>
+</header>
 
-    <button onclick="window.location.href='/hello'">
-        Запустить Python
-    </button>
+
+<div class="container">
+
+    <!-- LEFT SIDEBAR -->
+     
+    <aside class="sidebar">
+
+        <h3>Результаты</h3>
+
+        <button
+            class="result-button"
+            onclick="showResult('result1', this)"
+        >
+            Первичная информация
+        </button>
+
+        <button
+            class="result-button"
+            onclick="showResult('result2', this)"
+        >
+            Последовательности
+        </button>
+
+        <button
+            class="result-button"
+            onclick="showResult('result3', this)"
+        >
+            Древо
+        </button>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+
+    <main class="main">
+
+
+        <!-- SEARCH -->
+
+        <div class="search-box">
+
+            <label for="query">
+                COG ID
+            </label>
+
+            <div class="search-row">
+
+                <input
+                    type="text"
+                    id="query"
+                    placeholder="Введите COG ID..."
+                >
+
+                <button onclick="runAnalysis()">
+                    Анализировать
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- RESULTS -->
+
+        <div id="results">
+
+            <div class="result" id="result1">
+
+                <h2>Первичная информация</h2>
+
+                <p>
+                    This section will contain information
+                    about the selected gene, protein or COG.
+                </p>
+
+            </div>
+
+
+            <div class="result" id="result2">
+
+                <h2>Последовательности белков</h2>
+
+                <p>
+                    This section will contain similarity
+                    analysis results.
+                </p>
+
+            </div>
+
+
+            <div class="result" id="result3">
+
+                <h2>Древо</h2>
+
+                <p>
+                    This section will contain functional
+                    annotation and classification.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- ABOUT / HOW TO USE / CREDITS -->
+
+        <div class="info">
+
+
+            <div class="info-section">
+
+                <div
+                    class="info-title"
+                    onclick="toggleInfo(this)"
+                >
+                    О сервисе
+                </div>
+
+                <div class="info-content">
+
+                    <p>
+                        This tool is designed for analysis
+                        of biological data obtained from
+                        public databases.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="info-section">
+
+                <div
+                    class="info-title"
+                    onclick="toggleInfo(this)"
+                >
+                    Правила пользования
+                </div>
+
+                <div class="info-content">
+
+                    <p>
+                        Enter a gene, protein or COG identifier
+                        into the search field and press
+                        "Analyze".
+                    </p>
+
+                    <p>
+                        Use the buttons on the left to switch
+                        between different types of results.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="info-section">
+
+                <div
+                    class="info-title"
+                    onclick="toggleInfo(this)"
+                >
+                    Ссылки
+                </div>
+
+                <div class="info-content">
+
+                    <p>
+                        Developed as a bioinformatics
+                        analysis project.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<script>
+
+    /* ---------- SHOW RESULT ---------- */
+
+    function showResult(resultId, button) {
+
+        const results =
+            document.querySelectorAll(".result");
+
+        results.forEach(function(result) {
+            result.classList.remove("active");
+        });
+
+
+        const buttons =
+            document.querySelectorAll(".result-button");
+
+        buttons.forEach(function(btn) {
+            btn.classList.remove("active");
+        });
+
+
+        document
+            .getElementById(resultId)
+            .classList.add("active");
+
+
+        button.classList.add("active");
+    }
+
+
+    /* ---------- OPEN INFORMATION ---------- */
+
+    function toggleInfo(title) {
+
+        const section =
+            title.parentElement;
+
+        section.classList.toggle("open");
+    }
+
+
+    /* ---------- ANALYSIS ---------- */
+
+    function runAnalysis() {
+
+        const query =
+            document.getElementById("query").value;
+
+
+        if (query.trim() === "") {
+
+            alert("Please enter an ID or name.");
+
+            return;
+        }
+
+
+        alert(
+            "Analysis started for: " + query
+        );
+
+
+        /*
+            Здесь позже будет Flask:
+
+            fetch("/analyze", {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    query: query
+                })
+            });
+        */
+    }
+
+</script>
 
 </body>
 </html>
+
