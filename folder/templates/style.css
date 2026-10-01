@@ -1,0 +1,177 @@
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f7f7f7;
+            color: #222;
+        }
+
+        /* ---------- HEADER ---------- */
+
+        header {
+            padding: 25px 40px;
+            background: white;
+            border-bottom: 1px solid #ddd;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        header p {
+            margin: 6px 0 0;
+            color: #777;
+        }
+
+
+        /* ---------- LAYOUT ---------- */
+
+        .container {
+            display: flex;
+            min-height: calc(100vh - 100px);
+        }
+
+
+        /* ---------- LEFT SIDEBAR ---------- */
+
+        .sidebar {
+            width: 220px;
+            background: white;
+            border-right: 1px solid #ddd;
+            padding: 30px 20px;
+        }
+
+        .sidebar h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .result-button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+        
+            background: #f1f1f1;
+            border: 1px solid #ddd;
+            border-radius: 7px;
+        
+            text-align: left;
+            cursor: pointer;
+        
+            transition:
+                background 0.3s ease,
+                border-color 0.3s ease;
+        }
+
+        .result-button:hover {
+            background: #e5e5e5;
+        }
+
+        .result-button.active {
+            background: #ddd;
+            border-color: #ccc;
+        }
+
+
+
+        /* ---------- MAIN ---------- */
+
+        .main {
+            flex: 1;
+            padding: 40px;
+            max-width: 900px;
+        }
+
+
+        /* ---------- SEARCH ---------- */
+
+        .search-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+        }
+
+        .search-box label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-row input {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #bbb;
+            border-radius: 7px;
+        }
+
+        .search-row button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 7px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+        }
+
+        .search-row button:hover {
+            background: #444;
+        }
+
+
+        /* ---------- RESULTS ---------- */
+
+        #results {
+            margin-top: 30px;
+        }
+
+        .result {
+            display: none;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+        }
+
+        .result.active {
+            display: block;
+        }
+
+        .result h2 {
+            margin-top: 0;
+        }
+
+
+        /* ---------- INFORMATION ---------- */
+
+        .info {
+            margin-top: 30px;
+        }
+
+        .info-section {
+            border-top: 1px solid #ddd;
+        }
+
+        .info-title {
+            padding: 18px 5px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .info-title:hover {
+            color: #555;
+        }
+
+        .info-content { max-height: 0; overflow: hidden; padding: 0 5px; color: #555; line-height: 1.6; opacity: 0; transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.4s ease; } .info-section.open .info-content { max-height: 300px; padding: 0 5px 20px; opacity: 1; }
