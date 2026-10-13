@@ -6,7 +6,7 @@
 
     <title>CAT</title>
 
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 
@@ -79,6 +79,11 @@
 
         </div>
 
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <span>Анализ выполняется...</span>
+        </div>
+
 
         <!-- RESULTS -->
 
@@ -88,7 +93,7 @@
 
                 <h2>Первичная информация</h2>
 
-                <p>
+                <p id="placeholder1">
                     This section will contain information
                     about the selected gene, protein or COG.
                 </p>
@@ -100,10 +105,21 @@
 
                 <h2>Последовательности белков</h2>
 
-                <p>
+                <p id="placeholder2">
                     This section will contain similarity
                     analysis results.
                 </p>
+                <div class="sort-row">
+                    <label for="sort-mode">Сортировка:</label>
+                    <select id="sort-mode" onchange="applySort()">
+                        <option value="none">Как есть</option>
+                        <option value="desc">По длине ↓ (сначала длинные)</option>
+                        <option value="asc">По длине ↑ (сначала короткие)</option>
+                    </select>
+                </div>
+
+<div id="sequences-output"></div>
+                <div id="sequences-output"></div>
 
             </div>
 
@@ -112,7 +128,7 @@
 
                 <h2>Древо</h2>
 
-                <p>
+                <p id="placeholder3">
                     This section will contain functional
                     annotation and classification.
                 </p>
@@ -248,41 +264,167 @@
 
     /* ---------- ANALYSIS ---------- */
 
-    function runAnalysis() {
+    let controller = null;
 
-        const query =
-            document.getElementById("query").value;
+    function stopAnalysis() {
+        if (controller) {
+            controller.abort();
+        }
+    }
 
+    async function runAnalysis() {
+        const query = document.getElementById("query").value;
 
         if (query.trim() === "") {
-
             alert("Please enter an ID or name.");
-
             return;
         }
 
+        const loading = document.getElementById("loading");
+        const button = document.querySelector(".search-row button");
 
-        alert(
-            "Analysis started for: " + query
-        );
+        loading.style.display = "flex";   // показать индикатор
+        button.disabled = true;           // заблокировать кнопку «Анализировать»
 
+        controller = new AbortController();
 
-        /*
-            Здесь позже будет Flask:
-
-            fetch("/analyze", {
+        try {
+            const response = await fetch("/analyze", {
                 method: "POST",
-
-                headers: {
-                    "Content-Type": "application/json"
-                },
-
-                body: JSON.stringify({
-                    query: query
-                })
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({query: query}),
+                signal: controller.signal
             });
-        */
+
+            if (!response.ok) {
+                alert("Ошибка сервера: " + response.status);
+                return;
+            }
+
+            const data = await response.json();
+            lastData = data.data;
+            renderSequences(lastData);
+            document.getElementById("placeholder2").style.display = "none";
+            showResult("result2", document.querySelectorAll(".result-button")[1]); 
+        } 
+        
+        catch (err) {
+            if (err.name !== "AbortError") {
+                alert("Ошибка: " + err);
+            }
+
+        } finally {
+            loading.style.display = "none";   // скрыть индикатор
+            button.disabled = false;
+            controller = null;
+        }
     }
+    
+    let lastData = null;   // последние полученные данные
+
+    function applySort() {
+        if (lastData) {
+            renderSequences(lastData);
+        }
+    }
+
+    function median(numbers) {
+    const sorted = numbers.slice().sort(function(a, b) { return a - b; });
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2
+        ? sorted[mid]
+        : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function renderSequences(data) {
+    const container = document.getElementById("sequences-output");
+    container.innerHTML = "";
+
+    const cogs = Object.keys(data);
+    if (cogs.length === 0) {
+        container.textContent = "Ничего не найдено.";
+        return;
+    }
+
+    const PREVIEW = 5;
+    const mode = document.getElementById("sort-mode").value;
+
+    for (const cog of cogs) {
+        const records = data[cog].slice();
+
+        // медиана считается по всем записям COG, независимо от сортировки
+        const med = Math.round(median(records.map(function(r) { return r.seq.length; })));
+
+        if (mode === "desc") {
+            records.sort(function(a, b) { return b.seq.length - a.seq.length; });
+        } else if (mode === "asc") {
+            records.sort(function(a, b) { return a.seq.length - b.seq.length; });
+        }
+
+        const block = document.createElement("div");
+        block.className = "cog-block";
+
+        const title = document.createElement("h3");
+        title.textContent = cog;
+
+        const count = document.createElement("p");
+        count.className = "cog-count";
+        count.textContent =
+            "Последовательностей: " + records.length +
+            " · медианная длина: " + med + " а.о.";
+
+        block.append(title, count);
+
+        // обёртка для первых записей, на ней рисуется «затуманивание»
+        const previewWrap = document.createElement("div");
+        previewWrap.className = "preview-wrap";
+
+        const preview = document.createElement("div");
+        const rest = document.createElement("div");
+        rest.className = "rest hidden";
+
+        records.forEach(function(r, i) {
+            const rec = document.createElement("div");
+            rec.className = "record";
+            rec.textContent = ">" + r.id + "\n" + r.seq;
+            (i < PREVIEW ? preview : rest).appendChild(rec);
+        });
+
+        previewWrap.appendChild(preview);
+
+        const needToggle = records.length > PREVIEW;
+        let fade = null;
+
+        if (needToggle) {
+            fade = document.createElement("div");
+            fade.className = "fade";
+            previewWrap.appendChild(fade);
+        }
+
+        block.append(previewWrap, rest);
+
+        if (needToggle) {
+            const hiddenCount = records.length - PREVIEW;
+            const toggle = document.createElement("button");
+            toggle.className = "toggle-btn";
+            toggle.textContent = "Показать все (ещё " + hiddenCount + ")";
+
+            toggle.onclick = function() {
+                const isHidden = rest.classList.toggle("hidden");
+                // в свёрнутом виде затуманивание есть, в развёрнутом нет
+                fade.classList.toggle("hidden", !isHidden);
+                toggle.textContent = isHidden
+                    ? "Показать все (ещё " + hiddenCount + ")"
+                    : "Свернуть";
+            };
+
+            block.appendChild(toggle);
+        }
+
+        container.appendChild(block);
+    }
+}
+
 
 </script>
 
