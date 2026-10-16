@@ -34,6 +34,14 @@
         </button>
 
         <button
+            id="btn-table"
+            class="result-button"
+            onclick="showResult('result4', this)"
+        >
+            Таблица
+        </button>
+
+        <button
             class="result-button"
             onclick="showResult('result2', this)"
         >
@@ -98,6 +106,16 @@
                     about the selected gene, protein or COG.
                 </p>
 
+            </div>
+
+            <div class="result" id="result4">
+
+            <h2>Таблица</h2>
+
+                <p id="placeholder4">
+                    Здесь появится таблица белков после анализа.
+                </p>
+                <div id="table-output"></div>
             </div>
 
 
@@ -289,6 +307,7 @@
         controller = new AbortController();
 
         try {
+            await loadTable(query, controller.signal);
             const response = await fetch("/analyze", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
@@ -304,8 +323,7 @@
             const data = await response.json();
             lastData = data.data;
             renderSequences(lastData);
-            document.getElementById("placeholder2").style.display = "none";
-            showResult("result2", document.querySelectorAll(".result-button")[1]); 
+            document.getElementById("placeholder2").style.display = "none"; 
         } 
         
         catch (err) {
@@ -423,6 +441,98 @@ function renderSequences(data) {
 
         container.appendChild(block);
     }
+}
+
+const TABLE_COLUMNS = ["cog", "protein_id", "locus_tag", "assembly_id",
+                       "organism", "taxid", "category"];
+
+function renderTable(rows) {
+    const container = document.getElementById("table-output");
+    container.innerHTML = "";
+
+    if (rows.length === 0) {
+        container.textContent = "Ничего не найдено.";
+        return;
+    }
+
+    const bar = document.createElement("div");
+    bar.className = "table-bar";
+
+    const count = document.createElement("span");
+    count.textContent = "Строк: " + rows.length;
+
+    const btn = document.createElement("button");
+    btn.className = "toggle-btn";
+    btn.textContent = "Скачать таблицу";
+    btn.onclick = function() { downloadTable(rows); };
+
+    bar.append(count, btn);
+
+    const wrap = document.createElement("div");
+    wrap.className = "table-wrap";
+
+    const table = document.createElement("table");
+    table.className = "data-table";
+
+    const headRow = table.createTHead().insertRow();
+    TABLE_COLUMNS.forEach(function(c) {
+        const th = document.createElement("th");
+        th.textContent = c;
+        headRow.appendChild(th);
+    });
+
+    const body = table.createTBody();
+    rows.forEach(function(row) {
+        const tr = body.insertRow();
+        TABLE_COLUMNS.forEach(function(c) {
+            tr.insertCell().textContent = row[c] ?? "";
+        });
+    });
+
+    wrap.appendChild(table);
+    container.append(bar, wrap);
+}
+
+function downloadTable(rows) {
+    const escape = function(value) {
+        const s = String(value ?? "");
+        return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    };
+
+    const lines = [TABLE_COLUMNS.join(",")];
+    rows.forEach(function(row) {
+        lines.push(TABLE_COLUMNS.map(function(c) { return escape(row[c]); }).join(","));
+    });
+
+    const blob = new Blob(["\uFEFF" + lines.join("\n")],
+                          {type: "text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "cog_table.csv";
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
+
+async function loadTable(query, signal) {
+    const response = await fetch("/table", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({query: query}),
+        signal: signal
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error || "Ошибка сервера: " + response.status);
+    }
+
+    renderTable(data.table);
+    document.getElementById("placeholder4").style.display = "none";
+    showResult("result4", document.getElementById("btn-table"));
 }
 
 

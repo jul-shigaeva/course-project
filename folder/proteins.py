@@ -1,8 +1,6 @@
 from cog_api import get_results
 from Bio import SeqIO, Entrez 
 
-cgs = ['COG0001', 'COG0012']
-
 def get_sequences(cogs): 
     results = []
     for cog in cogs: 
