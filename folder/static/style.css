@@ -355,3 +355,22 @@ button:disabled {
 .table-bar .toggle-btn {
     margin-top: 0;
 }
+
+.result-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.result-button .dot {
+    display: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #f5a623;
+    flex-shrink: 0;
+}
+
+.result-button.ready .dot {
+    display: block;
+}

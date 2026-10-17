@@ -1,34 +1,39 @@
 from cog_api import get_results
 from Bio import SeqIO, Entrez 
 
-def get_sequences(cogs): 
-    results = []
-    for cog in cogs: 
-        results.append(get_results(cog))
+Entrez.email = 'shgvacop@gmail.com'
+Entrez.api_key = '3d935824f3086eb5b109f39934a74bbc7308'
 
-    # Достаем ID белков 
-    prot = {}
-    for result in results: 
-        idx = result[0]['cog']['cogid']
-        prot[idx] = []
-        for i in range(len(result)):
-            prot[idx].append(result[i]['protein']['name'])
+def fetch_sequences(ids, Batch = 200):
+    seqs = {}
+    for i in range(len(ids), Batch):
+        batch = ids[i:i+Batch]
+        handle = Entrez.efetch(
+            db = 'protein', 
+            id = batch, # достаем по списку айди по 200 айди 
+            rettype = 'fasta', # формат выдачи 
+            retmode = 'text' # тип выдачи 
+        )        
+        for record in SeqIO.parse(handle, 'fasta'): 
+            seqs[record.id] = str(record.seq)
 
+    return seqs 
+     
 
-    # Достаем белки 
-    Entrez.email = 'shgvacop@gmail.com'
-    Entrez.api_key = '3d935824f3086eb5b109f39934a74bbc7308'
+def get_sequences(table): 
+
+    # Достаем пары ID белков+организм из таблицы 
+    unique_ids = list(dict.fromkeys(row["protein_id"] for row in table))
+    seqs = fetch_sequences(unique_ids)
 
     prot_seqs = {}
-
-    for k, value in prot.items(): 
-        handle = Entrez.efetch(
-            db = "protein", 
-            id = value, # передаю список 
-            rettype = "fasta", # формат возвращаемых данных 
-            retmode = "text") # тип возвращаемых данных 
-        records = list(SeqIO.parse(handle, 'fasta'))
-        handle.close()
-        prot_seqs[k] = [{"id": record.id, "seq": str(record.seq)} for record in records]
+    for row in table:
+        seq = seqs.get(row["protein_id"])
+        if seq is None:        # NCBI не вернул этот белок
+            continue
+        prot_seqs.setdefault(row["cog"], []).append({
+            "id": row["protein_id"] + "|" + row["organism"],
+            "seq": seq,
+        })
 
     return prot_seqs

@@ -26,34 +26,30 @@
 
         <h3>Результаты</h3>
 
-        <button
-            class="result-button"
-            onclick="showResult('result1', this)"
-        >
-            Первичная информация
-        </button>
+        <button class="result-button" data-result="result1"
+        onclick="showResult('result1', this)">
+    Первичная информация <span class="dot"></span>
+</button>
 
-        <button
-            id="btn-table"
-            class="result-button"
-            onclick="showResult('result4', this)"
-        >
-            Таблица
-        </button>
+<button id="btn-table" class="result-button" data-result="result4"
+        onclick="showResult('result4', this)">
+    Таблица <span class="dot"></span>
+</button>
 
-        <button
-            class="result-button"
-            onclick="showResult('result2', this)"
-        >
-            Последовательности
-        </button>
+<button class="result-button" data-result="result2"
+        onclick="showResult('result2', this)">
+    Последовательности <span class="dot"></span>
+</button>
 
-        <button
-            class="result-button"
-            onclick="showResult('result3', this)"
-        >
-            Древо
-        </button>
+<button id="btn-organisms" class="result-button" data-result="result5"
+        onclick="showResult('result5', this)">
+    Организмы <span class="dot"></span>
+</button>
+
+<button class="result-button" data-result="result3"
+        onclick="showResult('result3', this)">
+    Древо <span class="dot"></span>
+</button>
 
     </aside>
 
@@ -141,6 +137,16 @@
 
             </div>
 
+            <div class="result" id="result5">
+
+    <h2>Организмы</h2>
+
+    <p id="placeholder5">
+        Здесь появятся диаграмма по группам организмов
+        и таблица паралогов после анализа.
+    </p>
+
+</div>
 
             <div class="result" id="result3">
 
@@ -266,7 +272,16 @@
 
 
         button.classList.add("active");
+        button.classList.remove("ready");
     }
+
+    function setReady(resultId, ready) {
+    const btn = document.querySelector('.result-button[data-result="' + resultId + '"]');
+    if (!btn) return;
+
+    const isOpen = document.getElementById(resultId).classList.contains("active");
+    btn.classList.toggle("ready", ready && !isOpen);
+}
 
 
     /* ---------- OPEN INFORMATION ---------- */
@@ -303,6 +318,9 @@
 
         loading.style.display = "flex";   // показать индикатор
         button.disabled = true;           // заблокировать кнопку «Анализировать»
+        document.querySelectorAll(".result-button").forEach(function(b) {
+    b.classList.remove("ready");
+});
 
         controller = new AbortController();
 
@@ -323,6 +341,7 @@
             const data = await response.json();
             lastData = data.data;
             renderSequences(lastData);
+            setReady("result2", true);
             document.getElementById("placeholder2").style.display = "none"; 
         } 
         
@@ -531,8 +550,8 @@ async function loadTable(query, signal) {
     }
 
     renderTable(data.table);
+    setReady("result4", true);
     document.getElementById("placeholder4").style.display = "none";
-    showResult("result4", document.getElementById("btn-table"));
 }
 
 
